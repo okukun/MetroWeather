@@ -1,0 +1,60 @@
+{
+    "appKeys": {
+        "KEY_CONDITIONS": 1,
+        "KEY_CONDITIONS_ID": 2,
+        "KEY_TEMPERATURE": 0
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "okukun",
+    "longName": "MetroWeather",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/menu.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU",
+                "type": "png"
+            },
+            {
+                "file": "images/bg_black.png",
+                "name": "IMAGE_BG_BLACK",
+                "type": "png"
+            },
+            {
+                "file": "images/square.png",
+                "name": "IMAGE_SQUARE",
+                "type": "png"
+            },
+            {
+                "file": "images/circle.png",
+                "name": "IMAGE_CIRCLE",
+                "type": "png"
+            },
+            {
+                "file": "images/btdc.png",
+                "name": "IMAGE_BTDC",
+                "type": "png"
+            },
+            {
+                "file": "images/bt.png",
+                "name": "IMAGE_BT",
+                "type": "png"
+            },
+            {
+                "file": "fonts/meteocons.ttf",
+                "name": "FONT_METEO_38",
+                "type": "font"
+            }
+        ]
+    },
+    "shortName": "MetroWeather",
+    "uuid": "1fe7a4a5-ed6e-4dd7-9199-260096bb74ce",
+    "versionCode": 1,
+    "versionLabel": "0.1",
+    "watchapp": {
+        "watchface": true
+    }
+}
