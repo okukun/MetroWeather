@@ -30,17 +30,21 @@ static GBitmap *s_field4_bitmap;
 static GBitmap *s_background_black_bitmap;
 
 const char* lang;
+const char* temp_mode;
+
+
+static char hourbuffer[5];
+static char minutebuffer[5];
+static char daybuffer[5];
+static char monthbuffer[5];
+static char weekdaybuffer[16];
 
 static void update_time() {
   // Get a tm structure
   time_t temp = time(NULL); 
   struct tm *tick_time = localtime(&temp);
 
-  static char hourbuffer[5];
-  static char minutebuffer[5];
-  static char daybuffer[5];
-  static char monthbuffer[5];
-  static char weekdaybuffer[16];
+
   
 lang = i18n_get_system_locale();  
 setlocale(LC_ALL, lang);
@@ -69,6 +73,7 @@ setlocale(LC_ALL, lang);
   text_layer_set_text(s_day_layer, daybuffer);
   text_layer_set_text(s_month_layer, monthbuffer);
   text_layer_set_text(s_weekday_layer, weekdaybuffer);
+  
 }
 
 static void battery_handler(BatteryChargeState new_state) {
@@ -217,6 +222,15 @@ static void main_window_load(Window *window) {
   // Make sure the time is displayed from the start
   update_time();
   battery_handler(battery_state_service_peek());
+  bool keytempmode = false; 
+  keytempmode = persist_exists(KEY_TEMP_MODE) ? persist_read_bool(KEY_TEMP_MODE) : false;
+  int test=2;
+  if(keytempmode==true){test=1;}else{test=0;};
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Persistent read: %s", test == 1 ? "true" : "false");
+  if (keytempmode){temp_mode="F";}else{temp_mode="C";};
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "temp_mode read persistent if: %s", temp_mode);
+  temp_mode = keytempmode ? "F" : "C";
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "temp_mode read persistent if: %s", temp_mode);
 }
 
 static void main_window_unload(Window *window) {
@@ -251,6 +265,9 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_conditions_layer);
   
   battery_state_service_unsubscribe();
+  
+  // Destroy persistent
+  //persist_delete(KEY_TEMP_MODE);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -276,25 +293,87 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   static char conditions_buffer[32];
   //static char weather_layer_buffer[32];
   static char conditions_id_buffer[3];
-
+  static char* night;
+  
+  if (strcmp(hourbuffer, "18") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "19") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "20") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "21") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "22") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "23") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "00") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "01") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "02") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "03") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "04") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "05") == 0){night="y";}else{
+  if (strcmp(hourbuffer, "06") == 0){night="y";}else{
+  night="n";}}}}}}}}}}}}}
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Nightmodus: %s", night);
   
   // Read first item
   Tuple *t = dict_read_first(iterator);
-  
+  int temp_c=0;
+  int temp_f=0;
   // For all items
   while(t != NULL) {
     // Which key was received?
     switch(t->key) {
     case KEY_TEMPERATURE: 
-        snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°C", (int)t->value->int32);
+        temp_c = (int)t->value->int32;
       break;
     case KEY_CONDITIONS: 
         snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", t->value->cstring);
       break;
     case KEY_CONDITIONS_ID:
-        snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", t->value->cstring);
+      if (strcmp(night, "y")==0){  
+        if (strcmp(conditions_id_buffer,"B") == 0){
+          snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", "C");
+        }else{
+          if (strcmp(conditions_id_buffer,"H") == 0){
+            snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", "I");
+          }else{
+            if (strcmp(conditions_id_buffer,"J") == 0){
+              snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", "K");
+            }else{
+          snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", t->value->cstring);
+            }}}}
+        else{
+          snprintf(conditions_id_buffer, sizeof(conditions_id_buffer), "%s", t->value->cstring);
+        }
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "ConditionsID(18-06: B=C, H=I, J=K): %s", conditions_id_buffer);
       break;
-    
+    case KEY_FARENHEIT:
+        temp_f = (int)t->value->int32;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Fahrenheit (temp_f): %d", temp_f);
+    case KEY_TEMP_MODE:
+        temp_mode = t->value->cstring;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "temp_mode SDK: %s", temp_mode);
+        if(strcmp(temp_mode, "F") == 0)
+        {
+          //FARENHEIT
+          persist_write_bool(KEY_TEMP_MODE, true);
+          APP_LOG(APP_LOG_LEVEL_DEBUG, "Fahrenheit=true: %d°F", temp_f);
+        }
+        else if(strcmp(temp_mode, "C") == 0)
+        {
+          //CELSIUS
+          persist_write_bool(KEY_TEMP_MODE, false);
+          APP_LOG(APP_LOG_LEVEL_DEBUG, "Fahrenheit=false: %d°C", temp_c);
+        }
+
+      bool keytempmode = persist_exists(KEY_TEMP_MODE) ? persist_read_bool(KEY_TEMP_MODE) : false;
+      int test=2;
+      if(keytempmode==true){test=1;}else{test=0;};
+      
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "persist bool (1=F, 0=C): %d", test);
+        if(keytempmode==true){
+          snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°F", temp_f);
+        }else{
+          if(keytempmode==false){
+            snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°C", temp_c);
+          }
+    }
     default:
       APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
       break;

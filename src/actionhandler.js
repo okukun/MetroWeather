@@ -7,13 +7,28 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+var temp_mode = ".";
+var options = {};
+var initialized = false;
+console.log('options ' + options);
+console.log('temp_mode ' + temp_mode);
+
+if (temp_mode==".") { temp_mode = "C"; }
 
 function locationSuccess(pos) {
   // Construct URL
-  
+  var apikey = "c33a3bee9eea2a4f11713c6bbc879951";
   var loc = navigator.language;
+  console.log('loc = ' + loc);
+  console.log('loc.length = ' + loc.length);
+  if (loc.length > 2 ){
+    loc = loc.substr(0, 2);
+  }
+  console.log('loc = ' + loc);
+  console.log('loc.length = ' + loc.length);
   var url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
-      pos.coords.latitude + "&lon=" + pos.coords.longitude + "&lang=" + loc;
+      pos.coords.latitude + "&lon=" + pos.coords.longitude + "&lang=" + loc +
+      "&APPID=" + apikey;
   //console.log('url = ' + url);
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
@@ -22,11 +37,13 @@ function locationSuccess(pos) {
       var json = JSON.parse(responseText);
       // Temperature in Kelvin requires adjustment
       var temperature = Math.round(json.main.temp - 273.15);
-      console.log("Temperature is " + temperature);
-
+      console.log("Temperature(C) is " + temperature);
+      var farenheit = Math.round(temperature*1.8+32);
+      console.log("Temperature(F) is " + farenheit);
+      
       // Conditions
-      var conditions = json.weather[0].description;      
-      console.log("Conditions are " + conditions);
+      var name = json.name;      
+      console.log("City is " + name);
             
       // Condition ID
       var conditionid = json.weather[0].id;
@@ -173,7 +190,7 @@ function locationSuccess(pos) {
         break;
         
         
-        case 951: id = "A";
+        case 951: id = "J";
         break;
         case 952: id = "F";
         break;
@@ -203,14 +220,16 @@ function locationSuccess(pos) {
 
       console.log('Condition ID is ' + conditionid);
       console.log('Icon is ' + id);
-      
+      console.log('temp_mode pre key transfer' + temp_mode);
       // Assemble dictionary using our keys
       var dictionary = {
         "KEY_TEMPERATURE": temperature,
-        "KEY_CONDITIONS": conditions,
-        "KEY_CONDITIONS_ID": id
+        "KEY_CONDITIONS": name,
+        "KEY_CONDITIONS_ID": id,
+        "KEY_FARENHEIT": farenheit,
+        "KEY_TEMP_MODE": temp_mode
       };
-
+      console.log('temp_mode after key transfer' + temp_mode);
       // Send to Pebble
       Pebble.sendAppMessage(dictionary,
         function(e) {
@@ -240,9 +259,28 @@ function getWeather() {
 Pebble.addEventListener('ready', 
   function(e) {
     console.log("PebbleKit JS ready!");
-    
+    initialized = true;
     // Get the initial weather
     getWeather();
+  }
+);
+
+Pebble.addEventListener('showConfiguration', function(e) {
+    //Load the remote config page
+    Pebble.openURL('http://rusche.it/pebble/metroweather/metroconfig.html?'+encodeURIComponent(JSON.stringify(options)));
+});
+
+Pebble.addEventListener('webviewclosed',
+  function(e) {
+    //Get JSON dictionary
+    if (e.response.charAt(0) == "{" && e.response.slice(-1) == "}" && e.response.length > 5) {
+    options = JSON.parse(decodeURIComponent(e.response));
+    console.log('Configuration window returned: ' + JSON.stringify(options));
+    temp_mode = options.temp_mode;
+      getWeather();
+    } else {
+    console.log("Cancelled");
+    }
   }
 );
 

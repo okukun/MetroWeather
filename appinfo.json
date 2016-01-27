@@ -2,12 +2,14 @@
     "appKeys": {
         "KEY_CONDITIONS": 1,
         "KEY_CONDITIONS_ID": 2,
-        "KEY_TEMPERATURE": 0
+        "KEY_FARENHEIT": 3,
+        "KEY_TEMPERATURE": 0,
+        "KEY_TEMP_MODE": 4
     },
     "capabilities": [
         "location"
     ],
-    "companyName": "okukun",
+    "companyName": "oku",
     "longName": "MetroWeather",
     "projectType": "native",
     "resources": {
@@ -50,10 +52,11 @@
             }
         ]
     },
+    "sdkVersion": "2",
     "shortName": "MetroWeather",
     "uuid": "1fe7a4a5-ed6e-4dd7-9199-260096bb74ce",
     "versionCode": 1,
-    "versionLabel": "0.1",
+    "versionLabel": "0.4",
     "watchapp": {
         "watchface": true
     }
